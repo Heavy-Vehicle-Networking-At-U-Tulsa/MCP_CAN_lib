@@ -1,3 +1,6 @@
+Sub-Development branch was copied to Master on June 30th, 2016.
+==============
+
 MCP_CAN Library for Arduino
 ==============
 MCP_CAN library v1.5
