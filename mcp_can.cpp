@@ -41,7 +41,7 @@ void MCP_CAN::mcp2515_reset(void)
     MCP2515_SELECT();
     spi_readwrite(MCP_RESET);
     MCP2515_UNSELECT();
-    delay(10);
+    delay(1);
 }
 
 /*********************************************************************************************************
@@ -516,7 +516,7 @@ void MCP_CAN::mcp2515_initCANBuffers(void)
 INT8U MCP_CAN::mcp2515_init(const INT8U canIDMode, const INT8U canSpeed, const INT8U canClock)
 {
 
-  INT8U res;
+    INT8U res;
 
     mcp2515_reset();
     
@@ -699,6 +699,7 @@ void MCP_CAN::mcp2515_read_id( const INT8U mcp_addr, INT8U* ext, INT32U* id )
         *id = (*id<<8) + tbufdata[MCP_EID0];
         *ext = 1;
     }
+
 }
 
 /*********************************************************************************************************
@@ -729,7 +730,7 @@ void MCP_CAN::mcp2515_read_canMsg( const INT8U buffer_sidh_addr)        /* read 
 
     mcp_addr = buffer_sidh_addr;
 
-    mcp2515_read_id( mcp_addr, &m_nExtFlg,&m_nID );
+    mcp2515_read_id( mcp_addr, &m_nExtFlg, &m_nID );
 
     ctrl = mcp2515_readRegister( mcp_addr-1 );
     m_nDlc = mcp2515_readRegister( mcp_addr+4 );
@@ -787,7 +788,11 @@ INT8U MCP_CAN::begin(INT8U idmodeset, INT8U speedset, INT8U clockset)
 {
     INT8U res;
 
-    SPI.begin();
+    #ifdef USE_SPI1
+        SPI1.begin();
+    #else
+        SPI.begin();
+    #endif
     res = mcp2515_init(idmodeset, speedset, clockset);
     if (res == MCP2515_OK)
         return CAN_OK;
@@ -1156,7 +1161,7 @@ INT8U MCP_CAN::readMsgBuf(INT32U *id, INT8U *ext, INT8U *len, INT8U buf[])
     *id  = m_nID;
     *len = m_nDlc;
     *ext = m_nExtFlg;
-    for(int i = 0; i<m_nDlc; i++)
+    for(int i = 0; i < m_nDlc; i++)
         buf[i] = m_nDta[i];
 
     return CAN_OK;
@@ -1168,8 +1173,9 @@ INT8U MCP_CAN::readMsgBuf(INT32U *id, INT8U *ext, INT8U *len, INT8U buf[])
 *********************************************************************************************************/
 INT8U MCP_CAN::readMsgBuf(INT32U *id, INT8U *len, INT8U buf[])
 {
-    if(readMsg() == CAN_NOMSG)
-	return CAN_NOMSG;
+    if(readMsg() == CAN_NOMSG) {
+      return CAN_NOMSG;  
+    } 
 
     if (m_nExtFlg)
         m_nID |= 0x80000000;
@@ -1179,8 +1185,7 @@ INT8U MCP_CAN::readMsgBuf(INT32U *id, INT8U *len, INT8U buf[])
 	
     *id  = m_nID;
     *len = m_nDlc;
-    
-    for(int i = 0; i<m_nDlc; i++)
+    for(int i = 0; i < m_nDlc; i++)
         buf[i] = m_nDta[i];
 
     return CAN_OK;
